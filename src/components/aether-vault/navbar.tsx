@@ -18,51 +18,7 @@ export function Navbar() {
           </div>
           <h1 className="text-xl font-bold text-foreground">AetherVault</h1>
         </Link>
-        <nav className="hidden md:flex items-center gap-1">
-          <Link href="/" passHref>
-            <Button variant="ghost">
-              <Home className="mr-2 h-4 w-4" />
-              Toolkit
-            </Button>
-          </Link>
-          <Link href="/aes-boxes" passHref>
-            <Button variant="ghost">
-              <BookOpen className="mr-2 h-4 w-4" />
-              AES Constants
-            </Button>
-          </Link>
-          <Link href="/des-boxes" passHref>
-            <Button variant="ghost">
-              <BookOpen className="mr-2 h-4 w-4" />
-              DES Constants
-            </Button>
-          </Link>
-          <Link href="/helper-functions" passHref>
-            <Button variant="ghost">
-              <Wrench className="mr-2 h-4 w-4" />
-              Helper Functions
-            </Button>
-          </Link>
-          <Link href="/how-to-code" passHref>
-            <Button variant="ghost">
-              <Code className="mr-2 h-4 w-4" />
-              How to Code
-            </Button>
-          </Link>
-          <Link href="/about" passHref>
-            <Button variant="ghost">
-              <User className="mr-2 h-4 w-4" />
-              About
-            </Button>
-          </Link>
-          <a href="/aethervault-static-site.zip" download>
-            <Button variant="ghost">
-              <Download className="mr-2 h-4 w-4" />
-              Download Site
-            </Button>
-          </a>
-        </nav>
-        <div className="md:hidden">
+        <div>
           <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon">
