@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Lock, BookOpen, Home, Menu, Wrench, Code, Download, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
 
 export function Navbar() {
   const [isSheetOpen, setSheetOpen] = useState(false);
@@ -29,6 +29,9 @@ export function Navbar() {
             <SheetContent side="right">
                 <SheetHeader>
                   <SheetTitle className="sr-only">Mobile Navigation Menu</SheetTitle>
+                  <SheetDescription className="sr-only">
+                    A list of links to navigate the site.
+                  </SheetDescription>
                 </SheetHeader>
                 <div className="mt-8 flex flex-col gap-2">
                     <Link href="/" passHref onClick={() => setSheetOpen(false)}>
