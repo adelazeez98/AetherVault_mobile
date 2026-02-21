@@ -6,8 +6,6 @@ import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 
 export default function AboutPage() {
-  // Replace with your actual image path
-  const profileImagePath = "https://picsum.photos/seed/adel-profile/128/128";
 
   return (
     <div className="bg-background text-foreground">
@@ -17,7 +15,7 @@ export default function AboutPage() {
             <CardHeader className="text-center">
               <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-primary/20 mb-4 relative">
                 <Image
-                  src={profileImagePath}
+                  src="https://picsum.photos/seed/profile/128/128"
                   alt="Adel Azeez Jabbour profile picture"
                   data-ai-hint="profile picture"
                   width={128}
