@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Lock, Unlock, ShieldCheck, ShieldAlert, Zap, Layers, Grid3x3, Copy } from 'lucide-react';
+import { Lock, Unlock, ShieldCheck, ShieldAlert, Zap, Layers, Grid3x3, Copy, RotateCcw } from 'lucide-react';
 import { processCipher, CipherResponse } from '@/lib/cipher-actions';
 import { DESVisualizer } from './des-visualizer';
 import { AESVisualizer } from './aes-visualizer';
@@ -57,7 +57,7 @@ export function CipherForm({ type, name, description }: CipherFormProps) {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { target: { name: string, value: string } }) => {
     const { name, value } = e.target;
     setCipherInputs(prev => ({
       ...prev,
@@ -66,6 +66,17 @@ export function CipherForm({ type, name, description }: CipherFormProps) {
         [name]: value
       }
     }));
+    if (result) {
+      setResult(null);
+    }
+  };
+
+  const handleReset = () => {
+    setCipherInputs(prev => ({
+      ...prev,
+      [type]: {}
+    }));
+    setResult(null);
   };
 
   const getInputValue = (fieldName: string, defaultValue: string = '') => {
@@ -196,7 +207,7 @@ export function CipherForm({ type, name, description }: CipherFormProps) {
                 Cipher Parameters
               </Label>
               <div className="p-4 bg-background rounded-lg border">
-                {renderSpecificInputs(type, getInputValue, handleInputChange)}
+                {renderSpecificInputs(type, getInputValue, handleInputChange as any)}
               </div>
             </div>
 
@@ -259,13 +270,25 @@ export function CipherForm({ type, name, description }: CipherFormProps) {
               )}
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full h-14 text-lg font-extrabold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg transition-all flex items-center justify-center gap-3"
-              disabled={isLoading}
-            >
-              {isLoading ? <Zap className="animate-spin" /> : "Execute Algorithm"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                type="submit" 
+                className="w-full h-14 text-lg font-extrabold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg transition-all flex items-center justify-center gap-3"
+                disabled={isLoading}
+              >
+                {isLoading ? <Zap className="animate-spin" /> : "Execute Algorithm"}
+              </Button>
+              <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-14 w-14 shrink-0"
+                  onClick={handleReset}
+                  aria-label="Reset form"
+              >
+                  <RotateCcw />
+              </Button>
+            </div>
           </form>
 
           {result && (
