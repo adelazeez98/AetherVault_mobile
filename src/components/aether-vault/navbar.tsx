@@ -70,7 +70,7 @@ export function Navbar() {
                             About
                         </Button>
                     </Link>
-                    <a href="https://www.mediafire.com/file/job21pblen4w4ip/aether-vault-01.zip/file" target="_blank" rel="noopener noreferrer" onClick={() => setSheetOpen(false)}>
+                    <a href="https://www.mediafire.com/file/ttu5lgyd78vc8hy/aether-vault-02.zip/file" target="_blank" rel="noopener noreferrer" onClick={() => setSheetOpen(false)}>
                         <Button variant="ghost" className="w-full justify-start text-lg p-6">
                             <Download className="mr-4 h-5 w-5" />
                             Download Site
