@@ -3,8 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useState } from "react";
-import { Loader2, RotateCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2, RotateCcw, Zap, Copy, ShieldCheck, ShieldAlert } from "lucide-react";
 
 
 import { Button } from "@/components/ui/button";
@@ -17,26 +17,37 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   number: z.coerce.number({ invalid_type_error: "Must be a number."}).int("Must be an integer."),
   modulus: z.coerce.number({ invalid_type_error: "Must be a number."}).int("Must be an integer.").optional(),
 });
 
-export function ModularInverse() {
-  const [output, setOutput] = useState("");
-  const [error, setError] = useState("");
+type FormValues = z.infer<typeof formSchema>;
+type Result = { success: boolean; message: string; output: string; } | null;
 
-  const form = useForm<z.infer<typeof formSchema>>({
+
+export function ModularInverse() {
+  const [result, setResult] = useState<Result>(null);
+  const { toast } = useToast();
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       number: undefined,
       modulus: 26,
     }
   });
+
+  const { watch, handleSubmit, formState, reset } = form;
+  const watchedValues = watch();
+
+  useEffect(() => {
+    if (result) setResult(null);
+  }, [watchedValues.number, watchedValues.modulus]);
+
 
   const gcd = (a: number, b: number): number => {
     return b === 0 ? a : gcd(b, a % b);
@@ -65,9 +76,7 @@ export function ModularInverse() {
       return x;
   };
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    setOutput("");
-    setError("");
+  function onSubmit(values: FormValues) {
     try {
       const modulus = values.modulus || 26;
       const number = values.number;
@@ -75,86 +84,120 @@ export function ModularInverse() {
       const result = modInverse(number, modulus);
 
       if (typeof result === 'string') {
-          setError(result);
-          setOutput("");
+        setResult({ success: false, message: result, output: "" });
       } else {
-          setOutput(String(result));
-          setError("");
+        setResult({ success: true, message: `The inverse of ${number} mod ${modulus} is ${result}.`, output: String(result) });
       }
     } catch (e: any) {
-      setError(e.message || "An unexpected error occurred.");
+      setResult({ success: false, message: e.message || "An unexpected error occurred.", output: "" });
     }
   }
 
   function handleReset() {
-    form.reset({ number: undefined, modulus: 26 });
-    setOutput("");
-    setError("");
+    reset({ number: undefined, modulus: 26 });
+    setResult(null);
   }
+
+  const handleCopy = () => {
+    if (result?.output) {
+      navigator.clipboard.writeText(result.output);
+      toast({
+        title: "Copied to clipboard!",
+      });
+    }
+  };
 
 
   return (
-    <Card className="w-full shadow-lg border-primary/20">
-      <CardHeader>
-        <CardTitle>Interactive Modular Inverse</CardTitle>
-        <CardDescription>Find the modular multiplicative inverse of a number 'a' such that (a * x) mod m = 1.</CardDescription>
-      </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Number (a)</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="e.g., 7" {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="modulus"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Modulus (m)</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="e.g., 26" {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={handleReset} disabled={form.formState.isSubmitting}>
-                <RotateCcw className="mr-2 h-4 w-4" /> Reset
-              </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting && (<Loader2 className="mr-2 h-4 w-4 animate-spin" />)}
-                Calculate
-              </Button>
-            </div>
-            <Separator />
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Result (x)</Label>
-                <Input readOnly value={output} placeholder="Result will be shown here" className="font-mono bg-muted" />
+    <Form {...form}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Number (a)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="e.g., 7" {...field} value={field.value ?? ''} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="modulus"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Modulus (m)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="e.g., 26" {...field} value={field.value ?? ''} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+            <Button 
+                type="submit" 
+                className="w-full h-14 text-lg font-extrabold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg transition-all flex items-center justify-center gap-3"
+                disabled={formState.isSubmitting}
+            >
+                {formState.isSubmitting ? <Loader2 className="animate-spin" /> : <Zap/>}
+                Execute
+            </Button>
+            <Button
+                type="button"
+                variant="destructive"
+                className="h-14 shrink-0 px-6 text-lg"
+                onClick={handleReset}
+                aria-label="Reset form"
+            >
+                <RotateCcw />
+                Reset
+            </Button>
+        </div>
+
+        {result && (
+          <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+            <Alert variant={result.success ? "default" : "destructive"}>
+              <div className="flex">
+                  <div className="flex-shrink-0">
+                  {result.success ? <ShieldCheck className="h-5 w-5 text-green-500" /> : <ShieldAlert className="h-5 w-5" />}
+                  </div>
+                  <div className="ml-3 w-0 flex-1">
+                  <AlertTitle>{result.success ? "Processing Complete" : "Error Occurred"}</AlertTitle>
+                  <AlertDescription className="mt-1">
+                      {result.message}
+                  </AlertDescription>
+                  </div>
               </div>
-              {error && (
-                <div className="space-y-2">
-                    <Label className="text-destructive">Error</Label>
-                    <Input readOnly value={error} placeholder="Errors will be displayed here" className="font-mono bg-muted text-destructive border-destructive/50" />
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </form>
-      </Form>
-    </Card>
+            </Alert>
+            
+            {result.success && result.output && (
+              <div className="relative p-6 bg-background rounded-lg shadow-inner border overflow-x-auto">
+                  <div className="flex justify-between items-center mb-2">
+                      <p className="text-xs uppercase text-muted-foreground font-bold tracking-widest">Output (x)</p>
+                      <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                          onClick={handleCopy}
+                          aria-label="Copy output"
+                      >
+                          <Copy className="w-4 h-4" />
+                      </Button>
+                  </div>
+                  <code className="text-lg font-mono break-all text-foreground selection:bg-accent selection:text-accent-foreground">
+                      {result.output}
+                  </code>
+              </div>
+            )}
+          </div>
+        )}
+      </form>
+    </Form>
   );
 }

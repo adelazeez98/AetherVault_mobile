@@ -3,8 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useState } from "react";
-import { Loader2, RotateCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2, RotateCcw, Zap, Copy, ShieldCheck, ShieldAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,9 +17,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 const hexRegex = /^[0-9a-fA-F]{1,2}$/;
 
@@ -28,7 +27,9 @@ const formSchema = z.object({
   multiplier: z.enum(["02", "03", "09", "0b", "0d", "0e"]),
 });
 
-// This function implements multiplication in the Galois Field GF(2^8)
+type FormValues = z.infer<typeof formSchema>;
+type Result = { success: boolean; message: string; output: string; } | null;
+
 const multiplyInGF = (stra: string, strb: string): string => {
     let a = parseInt(stra, 16);
     let b = parseInt(strb, 16);
@@ -49,9 +50,10 @@ const multiplyInGF = (stra: string, strb: string): string => {
 
 
 export function Gf28Multiplication() {
-  const [output, setOutput] = useState("");
+  const [result, setResult] = useState<Result>(null);
+  const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       hexValue: "",
@@ -59,101 +61,145 @@ export function Gf28Multiplication() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    setOutput("");
-    const resultHex = multiplyInGF(values.hexValue, values.multiplier);
-    setOutput(resultHex);
+  const { watch, handleSubmit, formState, reset } = form;
+  const watchedValues = watch();
+
+  useEffect(() => {
+    if (result) setResult(null);
+  }, [watchedValues.hexValue, watchedValues.multiplier]);
+
+
+  function onSubmit(values: FormValues) {
+    try {
+      const resultHex = multiplyInGF(values.hexValue, values.multiplier);
+      setResult({
+        success: true,
+        message: `Successfully multiplied {${values.hexValue}} by {${values.multiplier}}.`,
+        output: resultHex,
+      });
+    } catch (e: any) {
+        setResult({
+            success: false,
+            message: e.message || "An unexpected error occurred.",
+            output: "",
+        });
+    }
   }
 
   function handleReset() {
-    form.reset();
-    setOutput("");
+    reset();
+    setResult(null);
   }
 
+  const handleCopy = () => {
+    if (result?.output) {
+      navigator.clipboard.writeText(result.output);
+      toast({
+        title: "Copied to clipboard!",
+      });
+    }
+  };
+
   return (
-    <Card className="w-full shadow-lg border-primary/20">
-      <CardHeader>
-        <CardTitle>Interactive Multiplication in GF(2^8)</CardTitle>
-        <CardDescription>Perform multiplication in the Galois Field used in AES MixColumns.</CardDescription>
-      </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-6">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <FormField
-                  control={form.control}
-                  name="hexValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Hexadecimal Number (1-2 digits)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., 57" {...field} className="font-mono" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="multiplier"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>Multiply by</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex flex-wrap gap-x-4 gap-y-2"
-                        >
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl><RadioGroupItem value="02" /></FormControl>
-                            <FormLabel className="font-normal font-mono">{'{02}'}</FormLabel>
+    <Form {...form}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="hexValue"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Hexadecimal Number (1-2 digits)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., 57" {...field} className="font-mono" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+              <FormField
+              control={form.control}
+              name="multiplier"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Multiply by</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-wrap gap-x-4 gap-y-2"
+                    >
+                      {["02", "03", "09", "0b", "0d", "0e"].map(val => (
+                          <FormItem key={val} className="flex items-center space-x-2 space-y-0">
+                            <FormControl><RadioGroupItem value={val} /></FormControl>
+                            <FormLabel className="font-normal font-mono">{`{${val}}`}</FormLabel>
                           </FormItem>
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl><RadioGroupItem value="03" /></FormControl>
-                            <FormLabel className="font-normal font-mono">{'{03}'}</FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl><RadioGroupItem value="09" /></FormControl>
-                            <FormLabel className="font-normal font-mono">{'{09}'}</FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl><RadioGroupItem value="0b" /></FormControl>
-                            <FormLabel className="font-normal font-mono">{'{0b}'}</FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl><RadioGroupItem value="0d" /></FormControl>
-                            <FormLabel className="font-normal font-mono">{'{0d}'}</FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl><RadioGroupItem value="0e" /></FormControl>
-                            <FormLabel className="font-normal font-mono">{'{0e}'}</FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={handleReset} disabled={form.formState.isSubmitting}>
-                    <RotateCcw className="mr-2 h-4 w-4" /> Reset
-                </Button>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting && (<Loader2 className="mr-2 h-4 w-4 animate-spin" />)}
-                  Calculate
-                </Button>
-            </div>
-            <Separator />
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Result</Label>
-                <Input readOnly value={output} placeholder="Result will be shown here" className="font-mono bg-muted" />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+        </div>
+        <div className="flex items-center gap-2">
+            <Button 
+                type="submit" 
+                className="w-full h-14 text-lg font-extrabold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg transition-all flex items-center justify-center gap-3"
+                disabled={formState.isSubmitting}
+            >
+                {formState.isSubmitting ? <Loader2 className="animate-spin" /> : <Zap/>}
+                Execute
+            </Button>
+            <Button
+                type="button"
+                variant="destructive"
+                className="h-14 shrink-0 px-6 text-lg"
+                onClick={handleReset}
+                aria-label="Reset form"
+            >
+                <RotateCcw />
+                Reset
+            </Button>
+        </div>
+        
+        {result && (
+          <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+            <Alert variant={result.success ? "default" : "destructive"}>
+              <div className="flex">
+                  <div className="flex-shrink-0">
+                  {result.success ? <ShieldCheck className="h-5 w-5 text-green-500" /> : <ShieldAlert className="h-5 w-5" />}
+                  </div>
+                  <div className="ml-3 w-0 flex-1">
+                  <AlertTitle>{result.success ? "Processing Complete" : "Error Occurred"}</AlertTitle>
+                  <AlertDescription className="mt-1">
+                      {result.message}
+                  </AlertDescription>
+                  </div>
               </div>
-            </div>
-          </CardContent>
-        </form>
-      </Form>
-    </Card>
+            </Alert>
+            
+            {result.success && result.output && (
+              <div className="relative p-6 bg-background rounded-lg shadow-inner border overflow-x-auto">
+                  <div className="flex justify-between items-center mb-2">
+                      <p className="text-xs uppercase text-muted-foreground font-bold tracking-widest">Output</p>
+                      <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                          onClick={handleCopy}
+                          aria-label="Copy output"
+                      >
+                          <Copy className="w-4 h-4" />
+                      </Button>
+                  </div>
+                  <code className="text-lg font-mono break-all text-foreground selection:bg-accent selection:text-accent-foreground">
+                      {result.output}
+                  </code>
+              </div>
+            )}
+          </div>
+        )}
+      </form>
+    </Form>
   );
 }
