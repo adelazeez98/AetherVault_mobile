@@ -280,13 +280,12 @@ export function CipherForm({ type, name, description }: CipherFormProps) {
               </Button>
               <Button
                   type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-14 w-14 shrink-0"
+                  variant="destructive"
+                  className="h-14 shrink-0 px-6 text-lg"
                   onClick={handleReset}
-                  aria-label="Reset form"
               >
                   <RotateCcw />
+                  Reset
               </Button>
             </div>
           </form>
