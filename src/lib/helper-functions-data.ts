@@ -51,31 +51,38 @@ int recursive_gcd(int a, int b) {
         id: 'modInverse',
         title: 'Modular Multiplicative Inverse',
         description: 'Finds the modular multiplicative inverse of an integer `a` modulo `m`. It uses the Extended Euclidean Algorithm. The inverse exists only if `a` and `m` are coprime.',
-        java: `public static int modInverse(int r1, int r2) {
-    int rr = r1;
-    int t1, t2, t, q, r;
-    t1 = 0;
-    t2 = 1;
-    while (r2 > 0) {
-        q = r1 / r2;
-        r = r1 - q * r2;
-        t = t1 - q * t2;
-        r1 = r2;
-        r2 = r;
-        t1 = t2;
-        t2 = t;
+        java: `// First, ensure gcd(a, m) == 1
+public static int modInverse(int a, int m) {
+    int m0 = m;
+    int y = 0, x = 1;
+
+    if (m == 1)
+        return 0;
+
+    while (a > 1) {
+        int q = a / m;
+        int t = m;
+
+        m = a % m;
+        a = t;
+        t = y;
+
+        y = x - q * y;
+        x = t;
     }
-    if (r1 == 1) {
-        if (t1 < 0) {
-            t1 = rr + t1;
-        }
-    }
-    return t1;
+
+    if (x < 0)
+        x += m0;
+
+    return x;
 }`,
         python: `# For Python 3.8+
 def mod_inverse(a, m):
-    # This is the most efficient way
-    return pow(a, -1, m)
+    # This is the most efficient way and handles non-coprime case
+    try:
+        return pow(a, -1, m)
+    except ValueError:
+        return -1 # Or raise an exception
 
 # Implementation using Extended Euclidean Algorithm
 def extended_gcd(a, b):
@@ -92,7 +99,8 @@ def mod_inverse_manual(a, m):
         raise Exception('modular inverse does not exist')
     return x % m
 `,
-        cpp: `int modInverse(int a, int m) {
+        cpp: `// First, ensure std::gcd(a, m) == 1
+int modInverse(int a, int m) {
     int m0 = m;
     int y = 0, x = 1;
 

@@ -5,6 +5,7 @@ import { Wrench } from 'lucide-react';
 import { HELPER_FUNCTIONS } from '@/lib/helper-functions-data';
 import { HelperFunctionDisplay } from '@/components/aether-vault/helper-function-display';
 import { Gf28Multiplication } from '@/components/aether-vault/gf28-multiplication';
+import { ModularInverse } from '@/components/aether-vault/modular-inverse';
 import { Separator } from '@/components/ui/separator';
 
 export default function HelperFunctionsPage() {
@@ -21,8 +22,9 @@ export default function HelperFunctionsPage() {
           </p>
         </header>
 
-        <div className="mb-12">
+        <div className="space-y-12 mb-12">
           <Gf28Multiplication />
+          <ModularInverse />
         </div>
 
         <div className="text-center mb-12">
