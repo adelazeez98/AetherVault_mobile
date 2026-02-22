@@ -283,6 +283,7 @@ export function CipherForm({ type, name, description }: CipherFormProps) {
                   variant="destructive"
                   className="h-14 shrink-0 px-6 text-lg"
                   onClick={handleReset}
+                  aria-label="Reset form"
               >
                   <RotateCcw />
                   Reset
@@ -292,16 +293,18 @@ export function CipherForm({ type, name, description }: CipherFormProps) {
 
           {result && (
             <div ref={resultRef} className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
-              <Alert variant={result.success ? "default" : "destructive"} className={result.success ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : ""}>
-                <div className="flex items-center gap-2">
-                  {result.success ? <ShieldCheck className="w-5 h-5 text-green-600" /> : <ShieldAlert className="w-5 h-5" />}
-                  <AlertTitle className={result.success ? "text-green-800 dark:text-green-100 font-bold" : "font-bold"}>
-                    {result.success ? "Processing Complete" : "Error Occurred"}
-                  </AlertTitle>
+              <Alert variant={result.success ? "default" : "destructive"}>
+                <div className="flex">
+                    <div className="flex-shrink-0">
+                    {result.success ? <ShieldCheck className="h-5 w-5 text-green-500" /> : <ShieldAlert className="h-5 w-5" />}
+                    </div>
+                    <div className="ml-3 w-0 flex-1">
+                    <AlertTitle>{result.success ? "Processing Complete" : "Error Occurred"}</AlertTitle>
+                    <AlertDescription className="mt-1">
+                        {result.message}
+                    </AlertDescription>
+                    </div>
                 </div>
-                <AlertDescription className={result.success ? "text-green-700 dark:text-green-300" : ""}>
-                  {result.message}
-                </AlertDescription>
               </Alert>
               
               {result.success && result.output && (
