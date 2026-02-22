@@ -312,6 +312,58 @@ std::string performXOR(std::string x, std::string y) {
 }`
     },
     {
+        id: 'gf28',
+        title: 'Galois Field (2^8) Multiplication',
+        description: 'Calculates the product of two bytes in the Galois Field GF(2^8) with the specific irreducible polynomial x^8 + x^4 + x^3 + x + 1, used in the AES MixColumns step.',
+        java: `public static int multiplyInGF(int a, int b) {
+    int result = 0;
+    for (int i = 0; i < 8; i++) {
+        if ((b & 1) != 0) {
+            result ^= a;
+        }
+        boolean highBitSet = (a & 0x80) != 0;
+        a <<= 1;
+        if (highBitSet) {
+            a ^= 0x1B; // Irreducible polynomial
+        }
+        b >>= 1;
+    }
+    return result & 0xFF;
+}`,
+        python: `def multiply_in_gf(a, b):
+    result = 0
+    for _ in range(8):
+        if (b & 1) != 0:
+            result ^= a
+        
+        high_bit_set = (a & 0x80) != 0
+        a <<= 1
+        if high_bit_set:
+            a ^= 0x1B # Irreducible polynomial
+        
+        b >>= 1
+    return result & 0xFF`,
+        cpp: `#include <cstdint>
+
+uint8_t multiplyInGF(uint8_t a, uint8_t b) {
+    uint8_t result = 0;
+    for (int i = 0; i < 8; ++i) {
+        if (b & 1) {
+            result ^= a;
+        }
+        
+        bool high_bit_set = (a & 0x80);
+        a <<= 1;
+        if (high_bit_set) {
+            a ^= 0x1B; // Irreducible polynomial
+        }
+        
+        b >>= 1;
+    }
+    return result;
+}`
+    },
+    {
         id: 'blockState',
         title: 'AES Block ↔ State Conversion',
         description: 'Functions to convert a 128-bit (32-hex-char) block into a 4x4 state matrix and back, as required by AES.',
